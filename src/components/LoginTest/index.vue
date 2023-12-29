@@ -20,23 +20,17 @@
 
         </el-form-item>
       </el-form>
-      <!-- 地址: <input v-model="url" type="text" placeholder="URL"><br /> -->
-      <!-- KEY: <input v-model="key" type="text" placeholder="key"><br />
-    租户: <input v-model="organization" type="text" placeholder="organization" @keyup:Enter="login"><br /> -->
+
       <p></p>
       <el-button @click="login" type="primary" plain> Next </el-button>
-      <!-- <button @click="login">暂不登录</button> -->
-      <!-- <p v-if="token"><b>Token: </b>{{ token }}</p> -->
-      <!-- <p>{{ status }}</p> -->
+
     </div>
 
     <!-- 第二个页面 -->
     <div v-show="!state">
 
       <el-form label-width="100px">
-        <!-- <el-form-item label="  地址:">
-          <el-input v-model="url" type="text" placeholder="URL" label="sssss"></el-input>
-        </el-form-item> -->
+
         <el-form-item label=" Token:" class="tokenForm">
           <div class="tokenForm">
             <el-input v-model="token" type="text" placeholder="Token"></el-input><el-button @click="reSetToken">reGetToken
@@ -46,12 +40,14 @@
           </div>
         </el-form-item>
         <el-form-item label="        action:">
-          <!-- <el-input v-model="action" type="text" placeholder="action"></el-input> -->
           <!-- 下拉框 -->
-          <el-select v-model="action" filterable placeholder="请选择action">
-            <!-- <el-opction v-for="item in actionList" :key="item" :label="item" :value="item"> </el-opction> -->
+          <!-- <el-select v-model="action" filterable placeholder="请选择action">
             <el-option v-for="item in actionList" :key="item" :label="item" :value="item" />
-          </el-select>
+          </el-select> -->
+
+          <MyAutocomplete v-model="action" :dataList="actionList">
+
+          </MyAutocomplete>
         </el-form-item>
 
         <el-form-item label=" name: ">
@@ -61,17 +57,12 @@
           <el-input v-model="body" type="textarea" placeholder="请求体参数" :rows="3"></el-input>
         </el-form-item>
       </el-form>
-      <!-- 地址: <input v-model="url" type="text" placeholder="URL"><br />
-    Token: <input v-model="token" type="text" placeholder="Token"><br />
-    action: <input v-model="action" type="text" placeholder="action"><br />
-    body: <input v-model="body" type="textarea" placeholder="body"><br /> -->
+
       <p></p>
       <el-button @click="getStatus" type="primary" plain :disabled="!action"> 发送 </el-button>
 
       <el-button @click="removeValue" type="warning" plain> 返回 </el-button>
-      <!-- <button @click="login">暂不登录</button> -->
-      <!-- <p v-if="token"><b>Token: </b>{{ token }}</p> -->
-      <!-- <p>{{ status }}</p> -->
+
       <p></p>
       <el-form label-width="100px">
 
@@ -92,13 +83,14 @@ import nprogress from 'nprogress'
 import { ref, onMounted } from "vue"
 import request from "../../axios/myAxios"
 import mockAxios from '../../axios/mockAxios'
+import MyAutocomplete from '@/components/MyAutocomplete/MyAutocomplete.vue'
 import axios from 'axios'
 
 
 
 const state = ref(true)
 // const url = ref('http://127.0.0.1:88')
-const url = ref('http://down.ddrj.com:88')
+const url = ref(localStorage.getItem('baseURL'))
 const key = ref('abc')
 const organization = ref('')
 const status = ref()
@@ -112,7 +104,18 @@ let newUrl
 let originUrl
 
 
+onMounted(() => {
 
+  if (url.value === '' || url.value === null) {
+    var protocol = window.location.protocol; // 获取协议，例如：http: 或 https:
+    var hostname = window.location.hostname; // 获取域名，例如：example.com
+    var port = window.location.port; // 获取端口号
+    // 构建协议、域名和端口号
+    var protocolDomainPort = protocol + '//' + hostname + (port ? ':' + port : '');
+    url.value = protocolDomainPort
+  }
+
+})
 
 const login = async () => {
   // 截取到协议和域名端口
@@ -124,7 +127,7 @@ const login = async () => {
     // 不输入地址
     originUrl = location.origin
   }
-  // console.log(newUrl);
+
   // 去请求当前这个地址
   const resToken = await mockAxios.get(`${url.value}/api?action=gettoken`, {
     params: {
@@ -136,6 +139,8 @@ const login = async () => {
     nprogress.done()
     return
   })
+
+  localStorage.setItem('baseURL', url.value)
   console.log(resToken);
 
   // 如果有token就执行下一步
